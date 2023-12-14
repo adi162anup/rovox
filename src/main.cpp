@@ -55,14 +55,10 @@ Motor* motor2;
 // Ultra sensor pins- single pin configuration
 const int triggercenter = 32;
 const int echocenter = 32;
-const int triggerright = 21;
-const int echoright = 21;
-const int triggerleft = 33;
-const int echoleft = 33;
 
-boolean leftFlag;
+
 boolean centerFlag;
-boolean rightFlag;
+
 
 #define TRIGGER_DIRECTION_DISTANCE 30
 
@@ -98,8 +94,6 @@ AsyncWebServer server(80);
 
 // For sonar
 NewPing sonarC(triggercenter, echocenter,MAX_DISTANCE);
-NewPing sonarL(triggerleft, echoleft,MAX_DISTANCE);
-NewPing sonarR(triggerright, echoright,MAX_DISTANCE);
 
 void keepLow();
 
@@ -331,11 +325,7 @@ void deviateLeft()
 
 void handleEchoSensor(){
   // Send ping, get distance in cm
-	float distanceL = sonarL.ping_cm();
-  delay(PING_INTERVAL);
   float distanceC = sonarC.ping_cm();
-  delay(PING_INTERVAL);
-  float distanceR = sonarR.ping_cm();
   delay(PING_INTERVAL);
 
  /*  Serial.println("Distances: ");
@@ -344,37 +334,11 @@ void handleEchoSensor(){
   Serial.println(distanceR); */
   //delay(1000);
 
-  leftFlag=checkObstacle(distanceL);
   centerFlag=checkObstacle(distanceC);
-  rightFlag=checkObstacle(distanceR);
   
-  if ((leftFlag) || (rightFlag) || (centerFlag))
+  if (centerFlag)
   {
-
-    if (centerFlag)
-    {
-      if (leftFlag)
-      {
-        deviateRight();
-      }
-
-      else if (rightFlag)
-        deviateLeft();
-      else
-        deviateLeft();
-    }
-    else if (leftFlag)
-    {
-      deviateRight();
-    }
-    else if (rightFlag)
-    {
-      deviateLeft();
-    }
-    else
-    {
-      deviateLeft();
-    }
+    deviateLeft();
   }
 
  else
