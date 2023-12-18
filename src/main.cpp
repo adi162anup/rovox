@@ -16,9 +16,11 @@
 
 #include <Servo_ESP32.h>
 
+#include "config.h"
 
-const char* ssid = "lalmol";
-const char* password = "pattikuttan420";
+
+const char* ssid = SSID;
+const char* password = PASSWORD;
 
 
 // Custom UUIDs for Robot Control Service
