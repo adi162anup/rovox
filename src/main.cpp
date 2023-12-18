@@ -16,8 +16,10 @@
 
 #include <Servo_ESP32.h>
 
-#include "config.h"
+#include "../config/config.h"
 
+extern const char* PASSWORD;
+extern const char* SSID;
 
 const char* ssid = SSID;
 const char* password = PASSWORD;
