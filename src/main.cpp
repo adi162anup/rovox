@@ -57,12 +57,10 @@ Motor* motor2;
 
 
 // Ultra sensor pins- single pin configuration
-const int triggercenter = 32;
-const int echocenter = 32;
+const int trigger = 32;
+const int echo = 32;
 
-
-boolean centerFlag;
-
+boolean flag;
 
 #define TRIGGER_DIRECTION_DISTANCE 30
 
@@ -71,7 +69,7 @@ boolean centerFlag;
 
 Servo_ESP32 servo; // Creates a servo object 
 
-int pos = 0; // stores servo position
+int pos; // stores servo position
 const int Servo_Pin = 17;
 
 //boolean volatile started=false;
@@ -93,11 +91,12 @@ std::atomic<bool> started(false);
 
 int speed;
 
+// Ultrasonic Setup
+NewPing sonar(trigger, echo,MAX_DISTANCE);
+
 // For Aysnc
 AsyncWebServer server(80);
 
-// For sonar
-NewPing sonarC(triggercenter, echocenter,MAX_DISTANCE);
 
 void keepLow();
 
@@ -108,7 +107,7 @@ void reverse(boolean shouldDelay);
 
 
 
-void handleEchoSensor();
+void handleEchoSensor(int pos);
 
 void wifi();
 
@@ -162,6 +161,16 @@ class MyCallbacks : public BLECharacteristicCallbacks
         started=false;
         keepLow();
         Serial.println("Stopped");
+      }
+      else if(value.compare("reverse")==0)
+      {
+       reverse(false);
+      }
+      else if(value.compare("right")==0){
+        deviateRight();
+      }
+      else if(value.compare("left")==0){
+        deviateLeft();
       }
       
   }
@@ -241,6 +250,7 @@ void setup()
   // servo.setPeriodHertz(50); // standard 50 hz servo
   // servo.attach(Servo_Pin,MIN_PW,MAX_PW); // for 0 to 180 sweep
 
+
   // Servo Motor Setup
   servo.attach(Servo_Pin,pwmServoChannel); // for 0 to 180 sweep
 
@@ -250,7 +260,7 @@ void setup()
 void loop()
 {
   if(started.load()){
-   handleEchoSensor();
+  //  handleEchoSensor();
    servoMotor();
   }
   //delay(500)
@@ -327,9 +337,9 @@ void deviateLeft()
   forward();
 }
 
-void handleEchoSensor(){
+void handleEchoSensor(int pos){
   // Send ping, get distance in cm
-  float distanceC = sonarC.ping_cm();
+  float distance = sonar.ping_cm();
   delay(PING_INTERVAL);
 
  /*  Serial.println("Distances: ");
@@ -338,17 +348,35 @@ void handleEchoSensor(){
   Serial.println(distanceR); */
   //delay(1000);
 
-  centerFlag=checkObstacle(distanceC);
+  flag=checkObstacle(distance);
   
-  if (centerFlag)
-  {
-    deviateLeft();
+  if (pos<90){
+    if(flag){
+      deviateRight();
+    }
+    else{
+      forward();
+    }
   }
 
- else
-  {
-    forward();
+  else if(pos==90){
+    if(flag){
+      keepLow();
+    }
+    else{
+      forward();
+    }
   }
+
+  else if(pos>90){
+    if(flag){
+      deviateLeft();
+    }
+    else{
+      forward();
+    }
+  }
+
 }
 
 boolean checkObstacle(float distance){
@@ -361,12 +389,13 @@ boolean checkObstacle(float distance){
 }
 
 void servoMotor() {
-  for(pos = 0; pos <= 180; pos +=1 ) {
+  for(pos = 0; pos <= 180; pos +=10 ) {
     servo.write(pos);
-    delay(15);
+    delay(500);
+    handleEchoSensor(pos);
   }
-  for(pos = 180; pos >= 0; pos -= 1){
-    servo.write(pos);
-    delay(15);
-  }
+  // for(pos = 180; pos >= 0; pos -= 1){
+  //   servo.write(pos);
+  //   delay(15);
+  // }
 }
