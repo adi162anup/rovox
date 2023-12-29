@@ -160,6 +160,7 @@ class MyCallbacks : public BLECharacteristicCallbacks
         // This should be synchronized to avoid race condition with echo
         started=false;
         keepLow();
+        servo.write(90);
         Serial.println("Stopped");
       }
       else if(value.compare("reverse")==0)
