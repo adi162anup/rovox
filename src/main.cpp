@@ -122,7 +122,7 @@ class MyserverCallbacks : public BLEServerCallbacks
   {
     keepLow();
 
-    //Serial.println("Connected");
+    Serial.println("Connected");
   }
 
   void onDisconnect(BLEServer *pServer)
@@ -154,6 +154,7 @@ class MyCallbacks : public BLECharacteristicCallbacks
         speed=dutyCycle_11;
         started=true;
         forward();
+        Serial.println("Started");
       }
       else if(value.compare("stop")==0)
       {
@@ -392,7 +393,7 @@ boolean checkObstacle(float distance){
 void servoMotor() {
   for(pos = 0; pos <= 180; pos +=10 ) {
     servo.write(pos);
-    delay(500);
+    delay(100);
     handleEchoSensor(pos);
   }
   // for(pos = 180; pos >= 0; pos -= 1){
