@@ -181,7 +181,7 @@ class MyCallbacks : public BLECharacteristicCallbacks
 void setup()
 {
   Serial.begin(9600);
-  wifi();
+  // wifi();
   pinMode(ONBOARD_LED,OUTPUT);
   // PIN mode will be handled by the New ping library
   /* pinMode(triggerleft,OUTPUT);
