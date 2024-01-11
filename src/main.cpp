@@ -154,6 +154,7 @@ class MyCallbacks : public BLECharacteristicCallbacks
         speed=dutyCycle_11;
         started=true;
         forward();
+        servoMotor();
         Serial.println("Started");
       }
       else if(value.compare("stop")==0)
@@ -261,10 +262,10 @@ void setup()
 
 void loop()
 {
-  if(started.load()){
-  //  handleEchoSensor();
-   servoMotor();
-  }
+  // if(started.load()){
+  // //  handleEchoSensor();
+  //  servoMotor();
+  // }
   //delay(500)
   
 }
