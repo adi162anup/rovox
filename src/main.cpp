@@ -154,14 +154,12 @@ class MyCallbacks : public BLECharacteristicCallbacks
         speed=dutyCycle_11;
         started=true;
         forward();
-        servoMotor();
         Serial.println("Started");
       }
       else if(value.compare("stop")==0)
       {
         // This should be synchronized to avoid race condition with echo
         started=false;
-        keepLow();
         servo.write(90);
         Serial.println("Stopped");
       }
@@ -262,10 +260,10 @@ void setup()
 
 void loop()
 {
-  // if(started.load()){
-  // //  handleEchoSensor();
-  //  servoMotor();
-  // }
+  if(started.load()){
+  //  handleEchoSensor();
+   servoMotor();
+  }
   //delay(500)
   
 }
@@ -393,11 +391,18 @@ boolean checkObstacle(float distance){
 
 void servoMotor() {
   for(pos = 0; pos <= 180; pos +=10 ) {
+    if(!started.load()){
+      keepLow();
+      break;
+    }
     servo.write(pos);
     delay(100);
     handleEchoSensor(pos);
   }
   for(pos = 180; pos >= 0; pos -= 10){
+    if(!started.load()){
+      break;
+    }
     servo.write(pos);
     delay(100);
     handleEchoSensor(pos);
