@@ -401,6 +401,7 @@ void servoMotor() {
   }
   for(pos = 180; pos >= 0; pos -= 10){
     if(!started.load()){
+      keepLow();
       break;
     }
     servo.write(pos);
