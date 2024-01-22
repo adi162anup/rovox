@@ -181,7 +181,7 @@ class MyCallbacks : public BLECharacteristicCallbacks
 void setup()
 {
   Serial.begin(9600);
-  wifi();
+  // wifi();
   pinMode(ONBOARD_LED,OUTPUT);
   // PIN mode will be handled by the New ping library
   /* pinMode(triggerleft,OUTPUT);
@@ -392,11 +392,19 @@ boolean checkObstacle(float distance){
 
 void servoMotor() {
   for(pos = 0; pos <= 180; pos +=10 ) {
+    if(!started.load()){
+      keepLow();
+      break;
+    }
     servo.write(pos);
     delay(100);
     handleEchoSensor(pos);
   }
   for(pos = 180; pos >= 0; pos -= 10){
+    if(!started.load()){
+      keepLow();
+      break;
+    }
     servo.write(pos);
     delay(100);
     handleEchoSensor(pos);
