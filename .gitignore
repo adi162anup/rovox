@@ -5,3 +5,4 @@
 .vscode/ipch
 config
 Alexa_Server/node_modules
+Alexa_Server/.env
