@@ -4,3 +4,4 @@
 .vscode/launch.json
 .vscode/ipch
 config
+Alexa_Server/node_modules
