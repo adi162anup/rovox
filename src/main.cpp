@@ -18,7 +18,7 @@
 
 #include "../config/config.h"
 
-#include <HTTPClient.h>
+#include <httplib.h>
 
 extern const char* PASSWORD;
 extern const char* SSID;
