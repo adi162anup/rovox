@@ -478,6 +478,21 @@ void callback(char *topic, byte *payload, unsigned int length) {
     message += (char) payload[i]; // converting byte to string
   }
   Serial.print(message);
+  
+  // using recieved message for communication
+  if(message.equals("start"))
+      {
+        speed=dutyCycle_11;
+        started=true;
+        forward();
+      }
+  if(message.equals("stop"))
+      {
+        // This should be synchronized to avoid race condition with echo
+        started=false;
+        keepLow();
+        servo.write(90);
+      }
   Serial.println();
   Serial.println("-----------------------");
 }
