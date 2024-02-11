@@ -2,10 +2,6 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-// #include <BLEDevice.h>
-// #include <BLEUtils.h>
-// #include <BLEServer.h>
-// #include <BLE2902.h>
 #include <SparkFun_TB6612.h>
 
 #include <WiFi.h>
@@ -41,18 +37,15 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 
-// Custom UUIDs for Robot Control Service
-#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-
-#define DEVICE_MANUFACTURER "Mobiler"
-#define DEVICE_NAME "RobotA"
-
 // Standard UUIds for Device Information
 #define DEVINFO_UUID (uint16_t)0x180a
 #define DEVINFO_MANUFACTURER_UUID (uint16_t)0x2a29
 #define DEVINFO_NAME_UUID (uint16_t)0x2a24
 #define DEVINFO_SERIAL_UUID (uint16_t)0x2a25
+
+// constant loop delay
+
+#define LOOPDELAY 1000
 
 
 // Left Motor
@@ -133,83 +126,11 @@ void callback(char *topic, byte *payload, unsigned int length);
 
 boolean checkObstacle(float distance);
 
-
-// class MyserverCallbacks : public BLEServerCallbacks
-// {
-//   void onConnect(BLEServer *pServer)
-//   {
-//     keepLow();
-
-//     Serial.println("Connected");
-//   }
-
-//   void onDisconnect(BLEServer *pServer)
-//   {
-//     keepLow();
-//     //Serial.println("Disconnected");
-//     delay(200);
-//     pServer->getAdvertising()->start();
-//   }
-// };
-
-// // Call back class to handle bluetooth data events
-// class MyCallbacks : public BLECharacteristicCallbacks
-// {
-//   void onWrite(BLECharacteristic *pCharacteristic)
-//   {
-//     std::string value = pCharacteristic->getValue();
-//       //Done to remove NUL character coming from MIT App
-//       value.erase(find(value.begin(),value.end(),'\0'),value.end());
-   
-//       // if(value.compare("start7")==0)
-//       // {
-//       //   speed=dutyCycle_7;
-//       //   started=true;
-//       //   forward();
-//       // } 
-//       if(value.compare("start")==0)
-//       {
-//         speed=dutyCycle_11;
-//         started=true;
-//         forward();
-//         Serial.println("Started");
-//       }
-//       else if(value.compare("stop")==0)
-//       {
-//         // This should be synchronized to avoid race condition with echo
-//         started=false;
-//         keepLow();
-//         servo.write(90);
-//         Serial.println("Stopped");
-//       }
-//       else if(value.compare("reverse")==0)
-//       {
-//        reverse(false);
-//       }
-//       else if(value.compare("right")==0){
-//         deviateRight();
-//       }
-//       else if(value.compare("left")==0){
-//         deviateLeft();
-//       }
-      
-//   }
-// };
-
 void setup()
 {
   Serial.begin(9600);
   wifi();
   pinMode(ONBOARD_LED,OUTPUT);
-  // PIN mode will be handled by the New ping library
-  /* pinMode(triggerleft,OUTPUT);
-  pinMode(echoleft,INPUT);
-
-  pinMode(triggercenter,OUTPUT);
-  pinMode(echocenter,INPUT);
-
-  pinMode(triggerright,OUTPUT);
-  pinMode(echoright,INPUT); */
  
   // Pin mode of Motor pins internally handled by the library
   motor1=new Motor(Motor_1_Pin_1, Motor_1_Pin_2, Enable_1_Pin, 1,pwmChannel1,FREQUENCY,resolution);
@@ -217,58 +138,6 @@ void setup()
 
   digitalWrite(ONBOARD_LED,HIGH);
   keepLow();
-  
-  // BLEDevice::init(DEVICE_NAME);
-
-  // Main Service
-  // BLEServer *pServer = BLEDevice::createServer();
-  // pServer->setCallbacks(new MyserverCallbacks());
-
-  // BLEService *pService = pServer->createService(SERVICE_UUID);
-
-  // BLECharacteristic *pCharacteristic = pService->createCharacteristic(
-  //     CHARACTERISTIC_UUID,
-  //     BLECharacteristic::PROPERTY_READ |
-  //         BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY);
-
-  // pCharacteristic->setCallbacks(new MyCallbacks());
-  // pCharacteristic->addDescriptor((new BLE2902()));
-
-  // pCharacteristic->setValue("Welcome to Robot Control");
-  // pService->start();
-
-  // Device Info Service. Use Standard UUIds
-
-  // BLEService *pDeviceInfoService = pServer->createService(DEVINFO_UUID);
-  // BLECharacteristic *manCharacteristic = pDeviceInfoService->createCharacteristic(DEVINFO_MANUFACTURER_UUID, BLECharacteristic::PROPERTY_READ);
-  // manCharacteristic->setValue(DEVICE_MANUFACTURER);
-
-  // BLECharacteristic *deviceNameCharacteristic = pDeviceInfoService->createCharacteristic(DEVINFO_NAME_UUID, BLECharacteristic::PROPERTY_READ);
-  // deviceNameCharacteristic->setValue(DEVICE_NAME);
-
-  // BLECharacteristic *deviceSerialCharacteristic = pDeviceInfoService->createCharacteristic(DEVINFO_SERIAL_UUID, BLECharacteristic::PROPERTY_READ);
-  // String chipId = String((uint32_t)(ESP.getEfuseMac() >> 24), HEX);
-  // deviceSerialCharacteristic->setValue(chipId.c_str());
-  // pDeviceInfoService->start();
-
-  // BLEAdvertisementData adv;
-  // adv.setName(DEVICE_NAME);
-  // adv.setCompleteServices(BLEUUID(SERVICE_UUID));
-
-  // BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  // pAdvertising->addServiceUUID(SERVICE_UUID);
-  // pAdvertising->addServiceUUID(DEVINFO_UUID);
-  // pAdvertising->setMinPreferred(0x06);
-  // pAdvertising->setAdvertisementData(adv);
-  // pServer->getAdvertising()->start();
-
-  // Allows allocation of all timers
-  // ESP32PWM::allocateTimer(0);
-  // ESP32PWM::allocateTimer(1);
-  // ESP32PWM::allocateTimer(2);
-  // ESP32PWM::allocateTimer(3);
-  // servo.setPeriodHertz(50); // standard 50 hz servo
-  // servo.attach(Servo_Pin,MIN_PW,MAX_PW); // for 0 to 180 sweep
 
 
   // Servo Motor Setup
@@ -292,24 +161,8 @@ void setup()
   }
 
   // Publish and subsribe
-  client.publish(topic,"hello emqx");
+  // client.publish(topic,"hello emqx");
   client.subscribe(topic);
-
-
-  // startListening();
-
-  // config.api_key = FIREBASE_API;
-
-  // auth.user.email = USER_EMAIL;
-  // auth.user.password = USER_PASSWORD;
-
-  // Firebase.reconnectNetwork(false);
-
-  // firebaseData.setBSSLBufferSize(4096,1024);
-  // firebaseData.setResponseSize(2048);
-  
-
-  // Firebase.begin(&config,&auth);
   
 }
 
@@ -318,10 +171,10 @@ void loop()
   client.loop();
 
   if(started.load()){
-  //  handleEchoSensor();
    servoMotor();
   }
-  delay(100);
+  
+  delay(LOOPDELAY);
 
 }
 
