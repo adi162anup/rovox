@@ -6,6 +6,7 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 #include "../config/config.h"
+#include <PubSubClient.h>
 
 // Pin definitions for board to camera internal connection
 #define PWDN_GPIO_NUM 32
@@ -28,6 +29,17 @@
 const char* ssid = SSID;
 const char* password = PASSWORD;
 
+// MQTT Broker
+
+const char* mqtt_broker = MQTT_BROKER;
+const char* topic = TOPIC;
+const char* mqtt_username = MQTT_USERNAME;
+const char* mqtt_password = MQTT_PASSWORD;
+const int mqtt_port = MQTT_PORT;
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
 // For Aysnc
 AsyncWebServer server(80);
 
@@ -36,6 +48,7 @@ AsyncWebServer server(80);
 void sendingImage();
 void postingImage();
 void wifi();
+void callback(char *topic, byte *payload, unsigned int length);
 
 void setup() {
   Serial.begin(9600);
@@ -44,6 +57,8 @@ void setup() {
   // delay(1000);
   
   Serial.println();
+
+
 
   // OV2640 Camera Module
   Serial.println("INIT Camera");
@@ -86,12 +101,35 @@ void setup() {
     Serial.printf("Camera init failed with error 0x%x",err);
     return;
   }
+
+
+  // MQTT Broker Connection
+  client.setServer(mqtt_broker,mqtt_port);
+  client.setCallback(callback);
+
+  while(!client.connected()) {
+    String client_id = "esp32-client-";
+    client_id += String(WiFi.macAddress());
+    Serial.printf("The client %s connects to the public MQTT broker\n",client_id.c_str());
+    if(client.connect(client_id.c_str(),mqtt_username,mqtt_password)) {
+      Serial.println("Public EMQX MQTT broker connected");
+    } else{
+            Serial.print("Failed with state ");
+            Serial.print(client.state());
+            delay(2000);
+    }
+  }
+
+  // Publish to mqtt topic
+  client.subscribe(topic);
+
 }
 
 void loop() {
   // digitalWrite(33,HIGH);
   // delay(1000);
   // digitalWrite(33,LOW);
+  client.loop();
 } 
 
 void wifi(){
@@ -101,14 +139,17 @@ void wifi(){
 
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+    digitalWrite(33,LOW);
+    delay(1000);
+    digitalWrite(33,HIGH);
+    delay(1000);
   }
   Serial.println("");
   Serial.print("Connected to ");
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  digitalWrite(33,LOW);
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "Hi! I am ESP32.");
@@ -161,4 +202,25 @@ void sendingImage(){
     postingImage(fb);
     esp_camera_fb_return(fb);
   }
+}
+
+// callback function for mqtt
+
+void callback(char *topic, byte *payload, unsigned int length) {
+  Serial.print("Message arrived in topic: ");
+  Serial.println(topic);
+  Serial.print("Message: ");
+  String message;
+  for (int i=0;i<length;i++) {
+    message += (char) payload[i]; // converting byte to string
+  }
+  Serial.print(message);
+  
+  // using recieved message for communication
+  if(message.equals("picture"))
+      {
+        sendingImage();
+      }
+  Serial.println();
+  Serial.println("-----------------------");
 }
