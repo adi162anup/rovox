@@ -21,8 +21,8 @@
 // extern const char* SSID;
 
 
-const char* ssid = "Skrillex";
-const char* password = "69996969";
+const char* ssid = SSID;
+const char* password = PASSWORD;
 
 
 // MQTT Broker
@@ -170,8 +170,11 @@ void loop()
 {
   client.loop();
 
-  if(started.load()){
+  if(started==true){
    servoMotor();
+  }
+  else{
+    keepLow();
   }
   
   delay(LOOPDELAY);
@@ -210,6 +213,9 @@ void wifi(){
 
 void forward()
 {
+  if(started==false){
+    return;
+  }
   motor1->drive(speed);
   motor2->drive(speed);
   Serial.println("Moving forward");
@@ -217,6 +223,9 @@ void forward()
 
 void reverse(boolean shouldDelay)
 {
+  if(started==false){
+    return;
+  }
   motor1->drive(-speed);
   motor2->drive(-speed);
   //Serial.println("Moving backward");
@@ -228,6 +237,9 @@ void reverse(boolean shouldDelay)
 
 void deviateRight()
 {
+  if(started==false){
+    return;
+  }
   reverse(true);
   right(*motor1,*motor2,speed);
   //Serial.println("Turning right");
@@ -239,6 +251,9 @@ void deviateRight()
 
 void deviateLeft()
 {
+  if(started==false){
+    return;
+  }
   reverse(true);
   left(*motor1,*motor2,speed);
   //Serial.println("Turning left");
@@ -249,6 +264,9 @@ void deviateLeft()
 }
 
 void handleEchoSensor(int pos){
+  if(started==false){
+    return;
+  }
   // Send ping, get distance in cm
   float distance = sonar.ping_cm();
   delay(PING_INTERVAL);
@@ -301,7 +319,7 @@ boolean checkObstacle(float distance){
 
 void servoMotor() {
   for(pos = 0; pos <= 180; pos +=10 ) {
-    if(!started.load()){
+    if(started==false){
       keepLow();
       break;
     }
@@ -310,7 +328,7 @@ void servoMotor() {
     handleEchoSensor(pos);
   }
   for(pos = 180; pos >= 0; pos -= 10){
-    if(!started.load()){
+    if(started==false){
       keepLow();
       break;
     }
