@@ -43,7 +43,8 @@ PubSubClient client(espClient);
 // For Aysnc
 AsyncWebServer server(80);
 
-// boolean takeNewPhoto = false;
+// Flag for publishing message when rover sends image
+// boolean publishMessage = false;
 
 void sendingImage();
 void postingImage();
@@ -120,7 +121,7 @@ void setup() {
     }
   }
 
-  // Publish to mqtt topic
+  // Subscribe to mqtt topic
   client.subscribe(topic);
 
 }
